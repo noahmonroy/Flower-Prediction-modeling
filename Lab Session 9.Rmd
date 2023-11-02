@@ -1,0 +1,73 @@
+---
+title: "Lab Session 9: Decision Tree Analysis"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+iris <- read.csv("iris.csv")
+```
+```{r}
+RNGversion("3.5.2")
+set.seed(111) # use set.seed to use the same random number sequence as the tutorial
+train_sample <- sample(150, 130)
+
+# split the data frames
+iris_train <- iris[train_sample, ]
+iris_test  <- iris[-train_sample, ]
+
+# check the proportion of class variable
+prop.table(table(iris_train$species))
+
+prop.table(table(iris_test$species))
+```
+Stage 1: Build test model using c50 function
+```{r}
+#Load the Decision Tree Algorithm package
+install.packages("C50")
+library(C50)
+#The algorithm needs a factor type
+iris_train$species<-as.factor(iris_train$species)
+iris_test$species<-as.factor(iris_test$species)
+
+#Train a Decision Tree Model
+# Only use the first 4 columns as factors
+# Use species variable as the DV
+iris_model <- C5.0(iris_train[1:4], iris_train$species)
+
+summary(iris_model)
+#Look at summary. Strucutre of tree says that 45 iris-setosas fall into tree if petal length <= 1.9. If petal length > 1.9, petal width is divided into >1.7 (36 iris virginicas, 1 NOT iris virinica) or <= 1.7.The branch that is <= 1.7 has: iris versicolor (41), and iris virginica (4).  
+```
+Stage 2) Validation state using predict function
+```{r}
+iris_pred <- predict(iris_model, iris_test)
+
+#prediction for testing data
+iris_pred
+
+#See how well did the model do for the testing data. That is the misclassification rate for testing dataset?
+
+# cross tabulation of predicted versus actual classes
+install.packages("gmodels")
+library(gmodels)
+CrossTable(iris_test$species, iris_pred,
+           prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
+           dnn = c('actual speciest', 'predicted species'))
+
+#because all numbers are diagonals, misclassification rate = 0
+```
+
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
